@@ -1,6 +1,7 @@
 import './style.css'
 import * as THREE from 'three'
 import { ArrayCamera, CubeCamera, OrthographicCamera, PerspectiveCamera } from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 // Camera types:
 
@@ -65,8 +66,10 @@ to fix that we would multiply the left and right parameters by the aspect ratio 
 // const camera = new THREE.OrthographicCamera(-1 * aspectRatio, 1 * aspectRatio, 1, - 1, 0.1, 100)
 
 // Control camera with mouse
-/*  */
+/* We can do it custom or use OrbitControls
+Orbit controls config references camera so has to come after camera instance  */
 
+// Custom:
 const cursor = {
     x: 0,
     y: 0
@@ -81,12 +84,24 @@ window.addEventListener('mousemove', e => {
     console.log(cursor)
 })
 
+
+
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
 // camera.position.x = 2
 // camera.position.y = 2
 camera.position.z = 3
 camera.lookAt(mesh.position)
 scene.add(camera)
+
+////////////////////////////////////
+
+// OrbitControls:
+const controls = new OrbitControls(camera, canvas)
+// looks at center of scene by default, change with controls.target and then controls.update() in the tick loop
+/* controls.target.y = 1 */
+// weighted scroll, also needs controls.update() in loop
+controls.enableDamping = true
+/* controls.update() */
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -108,17 +123,17 @@ const tick = () => {
     // Mouse control
     // Camera position on cursor
 
-    /*     
-    camera.position.x = cursor.x
-    camera.position.y = - cursor.y    
-     */
+
+    /*  camera.position.x = cursor.x
+     camera.position.y = - cursor.y */
+
 
     // Amplified version
-    /*     
-    camera.position.x = cursor.x * 5
+
+    /* camera.position.x = cursor.x * 5
     camera.position.y = - cursor.y * 5
-    camera.lookAt(mesh.position) 
-    */
+    camera.lookAt(mesh.position) */
+
 
     // rotation on cursor (look at cursor effect)
     /*    
@@ -133,13 +148,14 @@ const tick = () => {
     You can access an approximation of π in native JavaScript using Math.PI.
 
     */
-    /*    
-    camera.position.x = Math.sin(cursor.x * Math.PI * 2) * 2
-    camera.position.z = Math.cos(cursor.x * Math.PI * 2) * 2
-    camera.position.y = cursor.y * 3
-    camera.lookAt(mesh.position)
-     */
+
+    /*  camera.position.x = Math.sin(cursor.x * Math.PI * 2) * 2
+     camera.position.z = Math.cos(cursor.x * Math.PI * 2) * 2
+     camera.position.y = cursor.y * 3
+     camera.lookAt(mesh.position) */
+
     // Render
+    controls.update()
     renderer.render(scene, camera)
 
     // Call tick again on the next frame
