@@ -18,8 +18,47 @@ image.onload = () => {
 
 // better way
 
-const textureLoader = new THREE.TextureLoader()
-const texture = textureLoader.load('/textures/door/color.jpg')
+const loadingManager = new THREE.LoadingManager()
+
+loadingManager.onStart = () => {
+    console.log('start')
+}
+loadingManager.onProgress = e => {
+    console.log('Progress: ', e)
+}
+loadingManager.onLoad = () => {
+    console.log('loaded')
+}
+loadingManager.onError = err => {
+    console.log('Error: ', err)
+}
+
+const textureLoader = new THREE.TextureLoader(loadingManager)
+const colorTexture = textureLoader.load('/textures/checkerboard-1024x1024.png')
+const alphaTexture = textureLoader.load('/textures/door/alpha.jpg')
+/* const heightTexture = textureLoader.load('/textures/door/height.jpg')
+const normalTexture = textureLoader.load('/textures/door/normal.jpg')
+const ambientOcclusionTexture = textureLoader.load('/textures/door/ambientOcclusion.jpg')
+const metalnessTexture = textureLoader.load('/textures/door/metalness.jpg')
+const roughnessTexture = textureLoader.load('/textures/door/roughness.jpg') */
+
+// // you can manipulate the shit out of textures:
+// colorTexture.repeat.x = 5 // repeat ratio
+// colorTexture.repeat.y = 7
+// colorTexture.wrapS = THREE.RepeatWrapping /* or THREE.MirroredRepeatWrapping , same but mirrored */ // turn on repeat X
+// colorTexture.wrapT = THREE.RepeatWrapping // turn on repeat Y
+// colorTexture.offset.x = 0.5 // offset - self evident
+// colorTexture.offset.y = 0.3
+// // When it comes to "circular" operations, always use fractions or multiples of PI 
+// colorTexture.rotation = Math.PI / 4
+
+// mipmapping 
+// halving of texture dimensions depending on how many pixels of it is visible on your resolution/zoom etc
+// as a result textures dimensions should be powers of 2 (128, 256, 512 etc.)
+
+colorTexture.minFilter = THREE.NearestFilter
+colorTexture.magFilter = THREE.NearestFilter // set magfilter to nearest for small undetailed textures to sharpen up
+// Nearest filter gives performance gains but oversharpens up detailed textures - looks bad sometimes
 
 /**
  * Base
@@ -34,7 +73,11 @@ const scene = new THREE.Scene()
  * Object
  */
 const geometry = new THREE.BoxGeometry(1, 1, 1)
-const material = new THREE.MeshBasicMaterial({ map: texture })
+const material = new THREE.MeshBasicMaterial({ 
+    map: colorTexture, 
+    alphaMap: alphaTexture
+    // height: heightTexture 
+})
 const mesh = new THREE.Mesh(geometry, material)
 scene.add(mesh)
 
