@@ -1,9 +1,9 @@
-import GUI from 'lil-gui';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import GUI from 'lil-gui'
+import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 
 /**
  * Loaders
@@ -38,12 +38,18 @@ const scene = new THREE.Scene()
  * Update all materials
  */
 
+const isMesh = (
+	node: THREE.Object3D<THREE.Object3DEventMap>
+): node is THREE.Mesh => node instanceof THREE.Mesh
+
+const isStandardMaterial = (
+	material: THREE.Mesh['material']
+): material is THREE.MeshStandardMaterial =>
+	material instanceof THREE.MeshStandardMaterial
+
 const updateAllMaterials = () => {
 	scene.traverse((child) => {
-		if (
-			child instanceof THREE.Mesh &&
-			child.material instanceof THREE.MeshStandardMaterial
-		) {
+		if (isMesh(child) && isStandardMaterial(child.material)) {
 			child.material.envMapIntensity = global.envMapIntensity
 			child.castShadow = true
 			child.receiveShadow = true
