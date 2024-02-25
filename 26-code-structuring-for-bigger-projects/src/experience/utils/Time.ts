@@ -3,10 +3,10 @@ export default class Time extends EventTarget {
 	current: number
 	elapsed: number
 	delta: number
+	active: boolean = true
+
 	constructor() {
 		super()
-
-		console.log('time initted innit')
 
 		this.start = Date.now()
 		this.current = this.start
@@ -17,14 +17,18 @@ export default class Time extends EventTarget {
 	}
 
 	tick() {
-		// console.log('tick')
+		if (!this.active) return
+
 		const currentTime = Date.now()
 		this.delta = currentTime - this.current
 		this.current = currentTime
 		this.elapsed = this.current - this.start
 
 		this.dispatchEvent(new Event('tick'))
-
 		requestAnimationFrame(() => this.tick())
+	}
+
+	destroy() {
+		this.active = false
 	}
 }
