@@ -2,6 +2,8 @@ import * as THREE from 'three'
 
 import Camera from './Camera'
 import Renderer from './Renderer'
+import { sources } from './sources'
+import Resources from './utils/Resources'
 import Sizes from './utils/Sizes'
 import Time from './utils/Time'
 import World from './world/World'
@@ -11,6 +13,7 @@ export default class Experience {
 	sizes: Sizes
 	time: Time
 	scene: THREE.Scene
+	resources: Resources
 	camera: Camera
 	renderer: Renderer
 	world: World
@@ -24,6 +27,8 @@ export default class Experience {
 
 		this.canvas = canvas
 		this.scene = new THREE.Scene()
+		this.resources = new Resources(sources)
+
 		this.camera = new Camera(this)
 		this.renderer = new Renderer(this)
 		this.world = new World(this)
