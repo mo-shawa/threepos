@@ -1,6 +1,8 @@
+import GUI from 'lil-gui'
 import * as THREE from 'three'
 
 import Experience from '../Experience'
+import Debug from '../utils/Debug'
 import Resources from '../utils/Resources'
 import { isMesh, isStandardMaterial } from '../utils/utils'
 
@@ -10,11 +12,18 @@ export default class Environment {
 	sunLight: THREE.DirectionalLight
 	resources: Resources
 	environmentMap: EnvironmentMap
+	debug: Debug
+	debugFolder: GUI
 
 	constructor(experience: Experience) {
 		this.experience = experience
 		this.scene = this.experience.scene
 		this.resources = this.experience.resources
+		this.debug = this.experience.debug
+
+		if (this.debug.active) {
+			this.debugFolder = this.debug.ui!.addFolder('environment')
+		}
 
 		this.setSunLight()
 		this.setEnvironmentMap()
@@ -29,6 +38,23 @@ export default class Environment {
 		this.sunLight.position.set(3, 3, -2.25)
 
 		this.scene.add(this.sunLight)
+
+		// Debug
+		if (this.debug.active) {
+			this.debugFolder
+				.add(this.sunLight, 'intensity', 0, 10, 0.001)
+				.name('sunglightIntensity')
+
+			this.debugFolder
+				.add(this.sunLight.position, 'x', -10, 10, 0.001)
+				.name('sunlightX')
+		}
+		this.debugFolder
+			.add(this.sunLight.position, 'y', 0, 10, 0.001)
+			.name('sunlightY')
+		this.debugFolder
+			.add(this.sunLight.position, 'z', -10, 10, 0.001)
+			.name('sunlightZ')
 	}
 
 	setEnvironmentMap() {
@@ -40,10 +66,18 @@ export default class Environment {
 
 		this.scene.environment = this.environmentMap.texture
 
-		this.updateEnvironmentMapMaterial()
+		this.updateEnvMapMaterials()
+
+		// Debug
+		if (this.debug.active) {
+			this.debugFolder
+				.add(this.environmentMap, 'intensity', 0, 4, 0.001)
+				.name('envMapIntensity')
+				.onChange(() => this.updateEnvMapMaterials())
+		}
 	}
 
-	updateEnvironmentMapMaterial() {
+	updateEnvMapMaterials() {
 		this.scene.traverse((child) => {
 			if (isMesh(child) && isStandardMaterial(child.material)) {
 				child.material.envMap = this.environmentMap.texture

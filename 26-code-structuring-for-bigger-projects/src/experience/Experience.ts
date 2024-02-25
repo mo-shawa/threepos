@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import Camera from './Camera'
 import Renderer from './Renderer'
 import { sources } from './sources'
+import Debug from './utils/Debug'
 import Resources from './utils/Resources'
 import Sizes from './utils/Sizes'
 import Time from './utils/Time'
@@ -10,6 +11,7 @@ import World from './world/World'
 
 export default class Experience {
 	canvas: HTMLCanvasElement
+	debug: Debug
 	sizes: Sizes
 	time: Time
 	scene: THREE.Scene
@@ -22,6 +24,7 @@ export default class Experience {
 		// Global access
 		window.experience = this
 
+		this.debug = new Debug()
 		this.sizes = new Sizes()
 		this.time = new Time()
 
@@ -49,6 +52,7 @@ export default class Experience {
 
 	update() {
 		this.camera.update() // make sure to update camera before renderer
+		this.world.update()
 		this.renderer.update()
 	}
 }
