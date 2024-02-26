@@ -448,7 +448,7 @@ void main()
     // gl_FragColor = vec4( vec3(strength), 1 );
     
     // Pattern 50
-    float strength = cnoise(vUv * 20.0) + uTime/5.0;
+    float strength = cnoise(vUv * 20.0) + uTime/7.0;
     strength = sin(strength * 20.0);
     strength = step(0.9, strength);
     
@@ -459,7 +459,9 @@ void main()
     vec3 blackColor = vec3(0.0);
     vec3 uvColor = vec3(vUv, 1.0);
 
-    vec3 mixedColor = mix(blackColor, max(sin(uvColor + uTime), vec3(0.3)), strength);
+    vec3 shiftingColor = mix(uvColor * 1.0, vec3(sin(uTime), sin(uTime), 1.0), 0.7);
+
+    vec3 mixedColor = mix(blackColor, shiftingColor, strength);
 
 
     gl_FragColor = vec4( mixedColor, 1 );
