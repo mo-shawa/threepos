@@ -1,4 +1,5 @@
 import GUI from 'lil-gui'
+import Stats from 'stats.js'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
@@ -10,6 +11,9 @@ import galaxyVertexShader from './shaders/galaxy/vertex.glsl'
  */
 // Debug
 const gui = new GUI()
+const stats = new Stats()
+stats.showPanel(0)
+document.body.appendChild(stats.dom)
 
 // Canvas
 const canvas = document.querySelector<HTMLCanvasElement>('canvas.webgl')
@@ -21,19 +25,20 @@ const scene = new THREE.Scene()
 /**
  * Galaxy
  */
-const parameters: Record<string, any> = {}
-parameters.count = 200000
-parameters.size = 0.005
-parameters.radius = 5
-parameters.branches = 3
-parameters.spin = 1
-parameters.randomness = 0.5
-parameters.randomnessPower = 3
-parameters.insideColor = '#ff6030'
-parameters.outsideColor = '#1b3984'
+const parameters = {
+	count: 200000,
+	size: 45,
+	radius: 5,
+	branches: 3,
+	randomness: 0.75,
+	randomnessPower: 1.3,
+	insideColor: '#b66d58',
+	outsideColor: '#c1cdec',
+	timeMultiplier: 1,
+} as const
 
 let geometry: THREE.BufferGeometry | null = null
-let material: THREE.Material | null = null
+let material: THREE.ShaderMaterial | null = null
 let points: THREE.Points | null = null
 
 const generateGalaxy = () => {
@@ -43,16 +48,13 @@ const generateGalaxy = () => {
 		scene.remove(points)
 	}
 
+	const positions = new Float32Array(parameters.count * 3)
+	const randomness = new Float32Array(parameters.count * 3)
+	const scales = new Float32Array(parameters.count)
 	/**
 	 * Geometry
 	 */
 	geometry = new THREE.BufferGeometry()
-
-	const positions = new Float32Array(parameters.count * 3)
-	const colors = new Float32Array(parameters.count * 3)
-
-	const insideColor = new THREE.Color(parameters.insideColor)
-	const outsideColor = new THREE.Color(parameters.outsideColor)
 
 	for (let i = 0; i < parameters.count; i++) {
 		const i3 = i * 3
@@ -79,21 +81,21 @@ const generateGalaxy = () => {
 			parameters.randomness *
 			radius
 
-		positions[i3] = Math.cos(branchAngle) * radius + randomX
-		positions[i3 + 1] = randomY
-		positions[i3 + 2] = Math.sin(branchAngle) * radius + randomZ
+		positions[i3] = Math.cos(branchAngle) * radius
+		positions[i3 + 1] = 0
+		positions[i3 + 2] = Math.sin(branchAngle) * radius
 
-		// Color
-		const mixedColor = insideColor.clone()
-		mixedColor.lerp(outsideColor, radius / parameters.radius)
+		randomness[i3] = randomX
+		randomness[i3 + 1] = randomY
+		randomness[i3 + 2] = randomZ
 
-		colors[i3] = mixedColor.r
-		colors[i3 + 1] = mixedColor.g
-		colors[i3 + 2] = mixedColor.b
+		// Scales
+		scales[i] = Math.random()
 	}
 
 	geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-	geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+	geometry.setAttribute('aRandomness', new THREE.BufferAttribute(randomness, 3))
+	geometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1))
 
 	/**
 	 * Material
@@ -105,11 +107,17 @@ const generateGalaxy = () => {
 		vertexShader: galaxyVertexShader,
 		fragmentShader: galaxyFragmentShader,
 		uniforms: {
+			uTime: { value: 0 },
+			uTimeMultiplier: { value: parameters.timeMultiplier },
+
+			uSize: { value: parameters.size * renderer.getPixelRatio() },
+
 			uInsideColor: { value: new THREE.Color(parameters.insideColor) },
 			uOutsideColor: { value: new THREE.Color(parameters.outsideColor) },
+
+			uRadius: { value: parameters.radius },
 		},
 	})
-
 	/**
 	 * Points
 	 */
@@ -117,13 +125,23 @@ const generateGalaxy = () => {
 	scene.add(points)
 }
 
-generateGalaxy()
-
+gui
+	.add(parameters, 'timeMultiplier')
+	.min(0)
+	.max(10)
+	.step(0.001)
+	.onFinishChange(generateGalaxy)
 gui
 	.add(parameters, 'count')
 	.min(100)
 	.max(1000000)
 	.step(100)
+	.onFinishChange(generateGalaxy)
+gui
+	.add(parameters, 'size')
+	.min(1)
+	.max(100)
+	.step(0.5)
 	.onFinishChange(generateGalaxy)
 gui
 	.add(parameters, 'radius')
@@ -208,8 +226,9 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 const clock = new THREE.Clock()
 
 const tick = () => {
+	stats.begin()
 	const elapsedTime = clock.getElapsedTime()
-
+	if (material) material.uniforms.uTime.value = elapsedTime
 	// Update controls
 	controls.update()
 
@@ -217,7 +236,10 @@ const tick = () => {
 	renderer.render(scene, camera)
 
 	// Call tick again on the next frame
+	stats.end()
 	window.requestAnimationFrame(tick)
 }
 
+console.log(renderer.getPixelRatio())
+generateGalaxy()
 tick()
